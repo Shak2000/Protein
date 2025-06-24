@@ -6,6 +6,12 @@ CORS(app)
 
 
 def translate(seq):
+    """
+    Translate a DNA nucleotide sequence to an amino acid sequence
+
+    :param seq: the DNA nucleotide sequence
+    :return: the amino acid sequence that the DNA nucleotide sequence translates into
+    """
     table = {
         'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
         'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
@@ -41,7 +47,12 @@ def translate(seq):
 
 
 def clean_sequence(seq):
-    """Clean sequence by removing newlines and carriage returns"""
+    """
+    Clean sequence by removing newlines and carriage returns
+
+    :param seq: the raw DNA nucleotide sequence
+    :return: a clean version of the DNA nucleotide sequence without newlines and carriage returns
+    """
     seq = seq.replace("\n", "")
     seq = seq.replace("\r", "")
     seq = seq.replace(" ", "")  # Also remove spaces
@@ -50,11 +61,22 @@ def clean_sequence(seq):
 
 @app.route('/')
 def index():
+    """
+    Render the UI
+
+    :return: a rendered template of the UI
+    """
     return render_template('ui.html')
 
 
 @app.route('/process', methods=['POST'])
 def process_sequences():
+    """
+    Process the relevant information and store it in a JSON
+
+    :return: a JSON containing the result, the translated amino acid sequence, the original amino acid sequence,
+             and the DNA nucleotide sequence
+    """
     try:
         data = request.json
 
