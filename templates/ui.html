@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Translation Checker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: transform 0.2s ease;
+            font-weight: 600;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            display: none;
+        }
+
+        .result.true {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .result.false {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f1b0b7;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f1b0b7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .details {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #666;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DNA Translation Checker</h1>
+
+        <form id="dnaForm">
+            <div class="form-group">
+                <label for="dna_original">DNA Sequence (Original):</label>
+                <textarea id="dna_original" name="dna_original" placeholder="Paste your DNA sequence here (e.g., ATGCGATCG...)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="amino_acid_original">Amino Acid Sequence (Original):</label>
+                <textarea id="amino_acid_original" name="amino_acid_original" placeholder="Paste your amino acid sequence here (e.g., MRFSL...)"></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Check Translation</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            Processing sequences...
+        </div>
+
+        <div class="result" id="result"></div>
+        <div class="details" id="details"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        document.getElementById('dnaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const details = document.getElementById('details');
+            const error = document.getElementById('error');
+
+            // Hide previous results
+            result.style.display = 'none';
+            details.style.display = 'none';
+            error.style.display = 'none';
+
+            // Show loading
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = {
+                    dna_original: document.getElementById('dna_original').value,
+                    amino_acid_original: document.getElementById('amino_acid_original').value
+                };
+
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show result
+                    result.className = `result ${data.result ? 'true' : 'false'}`;
+                    result.textContent = data.result ? 'TRUE' : 'FALSE';
+                    result.style.display = 'block';
+
+                    // Show details
+                    details.innerHTML = `
+                        <strong>Details:</strong><br>
+                        DNA segment used (positions 20-935): ${data.dna_segment_used.substring(0, 50)}...<br>
+                        Translated protein: ${data.translated_protein}<br>
+                        Original protein: ${data.original_protein}<br>
+                        Match: ${data.result ? 'Yes' : 'No'}
+                    `;
+                    details.style.display = 'block';
+                } else {
+                    error.textContent = `Error: ${data.error}`;
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                error.textContent = `Network error: ${err.message}`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
